@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+
+    <!-- Login Page -->
+    <div id="login-page" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+            <div class="text-center">
+                <h1 class="text-3xl font-extrabold text-slate-800">Student Portal Login</h1>
+                <p class="mt-2 text-slate-500">Welcome back! Please enter your credentials.</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="university-id" class="text-sm font-medium text-slate-700">University ID</label>
+                    <input id="university-id" name="university-id" type="text" required class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., STU-12345">
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-medium text-slate-700">Password</label>
+                    <input id="password" name="password" type="password" required class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••">
+                </div>
+                <div id="login-error" class="text-sm text-red-600 font-medium hidden">
+                    Invalid University ID or Password.
+                </div>
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Portal -->
+    <div id="portal-app" class="hidden">
+        <header class="md:hidden bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-20">
+            <h1 class="text-xl font-bold text-blue-600">Student Portal</h1>
+            <button id="menu-toggle">
+                <i data-lucide="menu" class="w-7 h-7"></i>
+            </button>
+        </header>
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-30 md:z-auto bg-white w-64 md:w-72 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg flex flex-col">
+                <!-- Sidebar content will be injected here -->
+            </aside>
+            <!-- Main Content -->
+            <main id="main-content" class="flex-1 p-6 md:p-10">
+                <!-- Content for different tabs will be injected here -->
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DATA ---
+            const studentData = {
+                name: "Alex Doe",
+                studentId: "STU-12345",
+                program: "Bachelor of Science in Computer Science",
+                gpa: "3.8",
+                profilePicture: "https://placehold.co/100x100/E2E8F0/4A5568?text=AD",
+            };
+
+            const gradesData = [
+                { id: 1, course: "CS101: Intro to Programming", semester: "Fall 2023", grade: "A", credits: 3 },
+                { id: 2, course: "MA203: Calculus II", semester: "Fall 2023", grade: "B+", credits: 4 },
+                { id: 3, course: "PHY210: University Physics I", semester: "Fall 2023", grade: "A-", credits: 4 },
+                { id: 4, course: "ENG101: English Composition", semester: "Fall 2023", grade: "B", credits: 3 },
+                { id: 5, course: "CS240: Data Structures & Algorithms", semester: "Spring 2024", grade: "A", credits: 3 },
+                { id: 6, course: "CS350: Operating Systems", semester: "Spring 2024", grade: "B+", credits: 3 },
+                { id: 7, course: "HIS101: World History", semester: "Spring 2024", grade: "A-", credits: 3 },
+            ];
+
+            const coursesData = [
+                { id: 1, code: "CS301", name: "Web Development", instructor: "Dr. Evelyn Reed", schedule: "MWF 10:00 - 11:00 AM", description: "An introduction to modern web development technologies, including HTML, CSS, JavaScript, and React." },
+                { id: 2, code: "CS425", name: "Database Systems", instructor: "Dr. Ben Carter", schedule: "TTh 1:00 - 2:30 PM", description: "Covers the design, implementation, and management of database systems." },
+                { id: 3, code: "MA300", name: "Linear Algebra", instructor: "Dr. Olivia Chen", schedule: "MWF 2:00 - 3:00 PM", description: "A comprehensive study of vector spaces, linear transformations, and matrices." },
+                { id: 4, code: "PHI200", name: "Introduction to Philosophy", instructor: "Dr. Samuel Greene", schedule: "TTh 11:00 AM - 12:30 PM", description: "Explores fundamental questions about existence, knowledge, values, reason, mind, and language." },
+            ];
+
+            const feesData = {
+                tuition: 15000,
+                libraryFee: 200,
+                technologyFee: 350,
+                activityFee: 150,
+                total: 15700,
+                paid: 10000,
+                due: 5700,
+            };
+
+            // --- DOM ELEMENTS ---
+            const loginPage = document.getElementById('login-page');
+            const portalApp = document.getElementById('portal-app');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const mainContent = document.getElementById('main-content');
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menu-toggle');
+
+            // --- TEMPLATES ---
+            const createTitle = (text, icon) => `
+                <div class="flex items-center mb-6">
+                    <i data-lucide="${icon}" class="w-8 h-8 text-blue-500"></i>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 ml-3">${text}</h1>
+                </div>`;
+
+            const createCard = (content, extraClasses = '') => `<div class="bg-white rounded-xl shadow-md p-6 ${extraClasses}">${content}</div>`;
+
+            const dashboardTemplate = () => `
+                ${createTitle('Dashboard', 'home')}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${createCard(`<h2 class="font-bold text-lg text-gray-600 mb-2">Cumulative GPA</h2><p class="text-4xl font-extrabold text-blue-600">${studentData.gpa}</p>`)}
+                    ${createCard(`<h2 class="font-bold text-lg text-gray-600 mb-2">Current Courses</h2><p class="text-4xl font-extrabold text-green-600">${coursesData.length}</p>`)}
+                    ${createCard(`<h2 class="font-bold text-lg text-gray-600 mb-2">Outstanding Fees</h2><p class="text-4xl font-extrabold text-red-600">$${feesData.due.toLocaleString()}</p>`)}
+                </div>
+                ${createCard(`
+                    <h2 class="font-bold text-xl text-gray-700 mb-4">Announcements</h2>
+                    <ul class="space-y-3">
+                        <li class="p-3 bg-blue-50 rounded-lg">
+                            <p class="font-semibold text-blue-800">Fall 2024 Registration Opens Soon!</p>
+                            <p class="text-sm text-gray-600">Get ready to choose your classes for the upcoming semester. Registration opens on August 15th.</p>
+                        </li>
+                        <li class="p-3 bg-green-50 rounded-lg">
+                            <p class="font-semibold text-green-800">Library Renovation Complete</p>
+                            <p class="text-sm text-gray-600">The main library has reopened with new study spaces and a coffee shop. Check it out!</p>
+                        </li>
+                    </ul>
+                `, 'mt-8')}`;
+            
+            const getGradeRowsHtml = (filter) => {
+                const filteredGrades = filter === 'All Semesters' || !filter
+                    ? gradesData
+                    : gradesData.filter(grade => grade.semester === filter);
+
+                if (filteredGrades.length === 0) {
+                    return `<tr><td colspan="4" class="text-center p-8 text-gray-500">No grades found for this semester.</td></tr>`;
+                }
+
+                return filteredGrades.map((grade, index) => {
+                    const gradeColorClass = grade.grade.startsWith('A') ? 'bg-green-100 text-green-800' : grade.grade.startsWith('B') ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800';
+                    return `
+                        <tr class="border-b ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                            <td class="p-4 font-medium text-gray-800">${grade.course}</td>
+                            <td class="p-4 text-gray-600">${grade.semester}</td>
+                            <td class="p-4 text-gray-600 text-center">${grade.credits}</td>
+                            <td class="p-4 font-bold text-center">
+                                <span class="px-3 py-1 rounded-full text-sm ${gradeColorClass}">${grade.grade}</span>
+                            </td>
+                        </tr>`;
+                }).join('');
+            };
+
+            const gradesTemplate = () => {
+                const semesters = ['All Semesters', ...new Set(gradesData.map(grade => grade.semester))];
+                const semesterOptions = semesters.map(s => `<option value="${s}">${s}</option>`).join('');
+
+                return `
+                    ${createTitle('My Grades', 'bar-chart-2')}
+                    ${createCard(`
+                        <div class="mb-4">
+                            <label for="semester-filter" class="block text-sm font-medium text-gray-700">Filter by Semester</label>
+                            <select id="semester-filter" class="mt-1 block w-full md:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
+                                ${semesterOptions}
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table id="grades-table" class="w-full text-left">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-4 font-semibold text-gray-600">Course</th>
+                                        <th class="p-4 font-semibold text-gray-600">Semester</th>
+                                        <th class="p-4 font-semibold text-gray-600 text-center">Credits</th>
+                                        <th class="p-4 font-semibold text-gray-600 text-center">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${getGradeRowsHtml('All Semesters')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `)}`;
+            };
+            
+            const coursesTemplate = () => `
+                ${createTitle('Courses', 'book-open')}
+                <div class="space-y-6">
+                    ${coursesData.map(course => createCard(`
+                        <h2 class="text-xl font-bold text-gray-800">${course.code}: ${course.name}</h2>
+                        <p class="text-md text-gray-600 mt-1">Instructor: ${course.instructor}</p>
+                        <p class="text-sm text-gray-500 mt-1">Schedule: ${course.schedule}</p>
+                        <p class="mt-3 text-gray-700">${course.description}</p>
+                    `)).join('')}
+                </div>`;
+
+            const feePaymentTemplate = () => `
+                ${createTitle('Fee Payment', 'credit-card')}
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        ${createCard(`
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Fee Breakdown</h2>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center"><span class="text-gray-600">Tuition Fee</span><span class="font-medium text-gray-800">$${feesData.tuition.toLocaleString()}</span></div>
+                                <div class="flex justify-between items-center"><span class="text-gray-600">Library Fee</span><span class="font-medium text-gray-800">$${feesData.libraryFee.toLocaleString()}</span></div>
+                                <div class="flex justify-between items-center"><span class="text-gray-600">Technology Fee</span><span class="font-medium text-gray-800">$${feesData.technologyFee.toLocaleString()}</span></div>
+                                <div class="flex justify-between items-center"><span class="text-gray-600">Student Activity Fee</span><span class="font-medium text-gray-800">$${feesData.activityFee.toLocaleString()}</span></div>
+                                <hr class="my-3"/>
+                                <div class="flex justify-between items-center text-lg"><span class="font-bold text-gray-800">Total Fees</span><span class="font-bold text-gray-800">$${feesData.total.toLocaleString()}</span></div>
+                                <div class="flex justify-between items-center text-md"><span class="text-green-600">Amount Paid</span><span class="font-medium text-green-600">-$${feesData.paid.toLocaleString()}</span></div>
+                                <div class="flex justify-between items-center text-xl font-bold p-3 bg-red-50 text-red-600 rounded-lg"><span>Amount Due</span><span>$${feesData.due.toLocaleString()}</span></div>
+                            </div>
+                        `)}
+                    </div>
+                    <div>
+                        ${createCard(`
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Pay Online</h2>
+                            <form class="space-y-4">
+                                <div>
+                                    <label for="amount" class="block text-sm font-medium text-gray-700">Payment Amount</label>
+                                    <div class="mt-1 relative rounded-md shadow-sm">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center"><span class="text-gray-500 sm:text-sm">$</span></div>
+                                        <input type="number" id="amount" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" value="${feesData.due}">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="card-number" class="block text-sm font-medium text-gray-700">Card Number</label>
+                                    <input type="text" id="card-number" placeholder="•••• •••• •••• ••••" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div class="flex space-x-4">
+                                    <div class="flex-1">
+                                        <label for="expiry" class="block text-sm font-medium text-gray-700">Expiry</label>
+                                        <input type="text" id="expiry" placeholder="MM/YY" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label for="cvc" class="block text-sm font-medium text-gray-700">CVC</label>
+                                        <input type="text" id="cvc" placeholder="•••" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out">Pay $${feesData.due.toLocaleString()}</button>
+                            </form>
+                        `)}
+                    </div>
+                </div>`;
+            
+            const sidebarTemplate = () => `
+                <div class="p-6 text-center">
+                    <img src="${studentData.profilePicture}" alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-blue-200">
+                    <h2 class="text-xl font-bold text-gray-800">${studentData.name}</h2>
+                    <p class="text-sm text-gray-500">${studentData.studentId}</p>
+                </div>
+                <nav class="px-4">
+                    <ul id="nav-list">
+                        <li data-tab="Dashboard" class="nav-item flex items-center p-3 my-2 cursor-pointer rounded-lg transition-colors"><i data-lucide="home" class="w-6 h-6"></i><span class="ml-4 font-medium">Dashboard</span></li>
+                        <li data-tab="Grades" class="nav-item flex items-center p-3 my-2 cursor-pointer rounded-lg transition-colors"><i data-lucide="bar-chart-2" class="w-6 h-6"></i><span class="ml-4 font-medium">My Grades</span></li>
+                        <li data-tab="Courses" class="nav-item flex items-center p-3 my-2 cursor-pointer rounded-lg transition-colors"><i data-lucide="book-open" class="w-6 h-6"></i><span class="ml-4 font-medium">Courses</span></li>
+                        <li data-tab="Fee Payment" class="nav-item flex items-center p-3 my-2 cursor-pointer rounded-lg transition-colors"><i data-lucide="credit-card" class="w-6 h-6"></i><span class="ml-4 font-medium">Fee Payment</span></li>
+                    </ul>
+                </nav>
+                <div class="p-4 mt-auto">
+                    <div class="flex items-center p-3 bg-gray-100 rounded-lg">
+                        <i data-lucide="user" class="w-5 h-5 text-gray-500"></i>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-700">${studentData.program}</p>
+                        </div>
+                    </div>
+                </div>`;
+
+            // --- LOGIC ---
+            const renderContent = (tab) => {
+                switch (tab) {
+                    case 'Dashboard': mainContent.innerHTML = dashboardTemplate(); break;
+                    case 'Grades': mainContent.innerHTML = gradesTemplate(); break;
+                    case 'Courses': mainContent.innerHTML = coursesTemplate(); break;
+                    case 'Fee Payment': mainContent.innerHTML = feePaymentTemplate(); break;
+                    default: mainContent.innerHTML = dashboardTemplate();
+                }
+                lucide.createIcons(); // Re-render icons
+            };
+
+            const setActiveTab = (tabName) => {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    if (item.dataset.tab === tabName) {
+                        item.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+                        item.classList.remove('text-gray-600', 'hover:bg-blue-100', 'hover:text-blue-700');
+                    } else {
+                        item.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                        item.classList.add('text-gray-600', 'hover:bg-blue-100', 'hover:text-blue-700');
+                    }
+                });
+                renderContent(tabName);
+            };
+
+            const initializePortal = () => {
+                loginPage.classList.add('hidden');
+                portalApp.classList.remove('hidden');
+                sidebar.innerHTML = sidebarTemplate();
+                
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        setActiveTab(item.dataset.tab);
+                        sidebar.classList.add('-translate-x-full'); // Close mobile sidebar on nav
+                    });
+                });
+
+                setActiveTab('Dashboard');
+            };
+
+            // --- EVENT LISTENERS ---
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const universityId = document.getElementById('university-id').value;
+                const password = document.getElementById('password').value;
+
+                // Simple validation for demonstration
+                if (universityId === 'STU-12345' && password === 'password') {
+                    initializePortal();
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            });
+            
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+
+            // Event listener for semester filter (using event delegation)
+            mainContent.addEventListener('change', (e) => {
+                if (e.target && e.target.id === 'semester-filter') {
+                    const selectedSemester = e.target.value;
+                    const tableBody = document.querySelector('#grades-table tbody');
+                    if (tableBody) {
+                        tableBody.innerHTML = getGradeRowsHtml(selectedSemester);
+                    }
+                }
+            });
+
+            // Initial icon render
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
